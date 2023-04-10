@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: django
+    volumes:
+     - './server:/usr/src'
+    ports:
+     - 127.0.0.2:8000:8000
+    tty: true
+    # command: python3 manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - mysql
+    stdin_open: true
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: vue
+    volumes:
+     - './client/mysite:/usr/src'
+    ports:
+     - 127.0.0.2:8080:8080
+    tty: true
+    stdin_open: true
+    # command: npm run serve
+    depends_on:
+     - server
+    environment:
+     - NODE_ENV=development
+
+  mysql:
+    image: mysql:8.0.20
+    restart: always
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: django
+      MYSQL_DATABASE: django-local_db
+      MYSQL_USER: django
+      MYSQL_PASSWORD: django
+      TZ: 'Asia/Tokyo'
+    command: >
+      mysqld --default-authentication-plugin=mysql_native_password
+    volumes:
+    - ./data/data:/var/lib/mysql
+    ports:
+    - 127.0.0.2:3306:3306
